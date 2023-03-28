@@ -15,7 +15,7 @@ const updateTodo = (req, res) => {
 };
 
 const deleteTodo = (req, res) => {
-  res.send('Todo created');
+  res.send('Todo deleted');
 };
 
 module.exports = { getAllTodos, createTodo, getTodo, updateTodo, deleteTodo };
