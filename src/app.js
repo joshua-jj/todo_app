@@ -1,19 +1,20 @@
+require('dotenv').config(); 
+require('express-async-errors');
+
 const express = require('express');
-const todos = require('./routes/todos');
+const authRouter = require('./routes/auth');
+const todosRouter = require('./routes/todos');
+const notFoundMiddleware = require('./middlewares/not-found')
 const app = express();
 
-const port = 5000;
-
+const port = process.env.PORT || 5000;
 
 // middleware
 app.use(express.json());
 
-// routes
-app.get('/', (req, res) => {
-  res.send('Todo App');
-});
-
-app.use('/api/v1/todos', todos);
+app.use('/api/v1', authRouter);
+app.use('/api/v1/todos', todosRouter);
+app.use(notFoundMiddleware);
 
 app.listen(port, () => {
   console.log(`Listening to port ${port}...`);
