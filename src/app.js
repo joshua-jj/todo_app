@@ -1,5 +1,5 @@
 require('dotenv').config(); 
-require('express-async-errors');
+
 
 const express = require('express');
 const authRouter = require('./routes/auth');
@@ -12,6 +12,7 @@ const port = process.env.PORT || 5000;
 
 // middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 app.use('/api/v1', authRouter);
 app.use('/api/v1/todos', todosRouter);

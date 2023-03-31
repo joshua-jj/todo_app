@@ -1,5 +1,6 @@
 const getAllTodos = (req, res) => {
-  res.send('Get all todos');
+  const {id, name} = req.user
+  res.send(name);
 };
 
 const createTodo = (req, res) => {
