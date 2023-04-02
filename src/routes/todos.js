@@ -9,7 +9,7 @@ const {
 const authenticateToken = require('../middlewares/auth');
 const router = express.Router();
 
-router.route('/').get(authenticateToken, getAllTodos).post(createTodo);
-router.route('/:id').get(getTodo).patch(updateTodo).delete(deleteTodo);
+router.route('/').get(authenticateToken, getAllTodos).post(authenticateToken, createTodo);
+router.route('/:id').get(authenticateToken, getTodo).patch(authenticateToken, updateTodo).delete(authenticateToken, deleteTodo);
 
 module.exports = router;

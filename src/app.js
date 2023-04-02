@@ -1,6 +1,5 @@
 require('dotenv').config(); 
 
-
 const express = require('express');
 const authRouter = require('./routes/auth');
 const todosRouter = require('./routes/todos');
@@ -10,7 +9,7 @@ const app = express();
 
 const port = process.env.PORT || 5000;
 
-// middleware
+//~ middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
