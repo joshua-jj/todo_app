@@ -10,7 +10,6 @@ const verifyTodo = async (todoID, userID) => {
   if (todo.length == 0) {
     throw new NotFoundError(`No todo with id ${todoID}`);
   }
-  // return todo;
 };
 
 // ? Function to verify that task belongs to belongs to the todo_id
@@ -18,7 +17,7 @@ const verifyTask = async (taskID, todoID) => {
   let queryTask = `SELECT title, description, completed, deadline, created_at, updated_at FROM tasks where task_id = ${taskID} AND todo_id = ${todoID}`;
   const [task] = await db.query(queryTask);
   if (task.length == 0) {
-    throw new NotFoundError(`No todo with id ${taskID}`);
+    throw new NotFoundError(`No task with id ${taskID}`);
   }
   return task;
 };
@@ -50,7 +49,7 @@ const createTask = async (req, res) => {
   if (!title) throw new BadRequestError('Please provide task title');
   let queryTasks = `SELECT * FROM tasks WHERE title = '${title}'`;
   let queryCreateTask;
-  if (deadline == '') {
+  if (!deadline) {
     deadline = null;
     queryCreateTask = `INSERT INTO tasks (title, description, completed, deadline, todo_id) VALUES ('${title}', '${description}', ${isCompleted}, ${deadline}, ${todoID})`;
   } else {
@@ -59,7 +58,7 @@ const createTask = async (req, res) => {
   const [tasks] = await db.query(queryTasks);
   if (tasks.length > 0) throw new BadRequestError('Task already exists');
   await db.query(queryCreateTask);
-  res.status(StatusCodes.OK).json({ mssg: 'Task created' });
+  res.status(StatusCodes.CREATED).json({ mssg: 'Task created' });
 };
 
 //? Function to get a todo
@@ -104,7 +103,7 @@ const updateTask = async (req, res) => {
   // let queryTask = `SELECT * FROM tasks WHERE task_id = ${taskID} AND todo_id = ${todoID}`;
   let queryUpdate;
 
-  if (deadline == '') {
+  if (!deadline) {
     deadline = null;
     queryUpdate = `UPDATE tasks SET title = '${title}', description = '${description}', completed = ${isCompleted}, deadline = ${deadline} WHERE task_id = ${taskID}`;
   } else {

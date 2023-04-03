@@ -29,7 +29,7 @@ const createTodo = async (req, res) => {
   if (!title) throw new BadRequestError('Please provide todo title');
   let queryCreateTodo = `INSERT INTO todos (title, description, user_id) VALUES ('${title}', '${description}', ${userID})`;
   await db.query(queryCreateTodo);
-  res.status(StatusCodes.OK).json({ mssg: 'Todo created' });
+  res.status(StatusCodes.CREATED).json({ mssg: 'Todo created' });
 };
 
 //? Function to get a todo
@@ -81,7 +81,7 @@ const deleteTodo = async (req, res) => {
   // if (todo.length == 0) {
   //   throw new NotFoundError(`No todo with id ${todoID}`);
   // }
-  //* Verify that todo belongs to this user
+  //* Verify that todo belongs to this use
   await verifyTodo(todoID, userID);
   await db.query(queryDelete);
 
