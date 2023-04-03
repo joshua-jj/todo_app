@@ -11,7 +11,7 @@ const verifyTodo = async (todoID, userID) => {
     throw new NotFoundError(`No todo with id ${todoID}`);
   }
   return todo;
-}
+};
 
 //^ Function to get all todos
 const getAllTodos = async (req, res) => {
@@ -25,10 +25,16 @@ const getAllTodos = async (req, res) => {
 //& Function to create todo
 const createTodo = async (req, res) => {
   const { userID } = req.user;
-  const { title, description } = req.body;
+  const { todoID } = req.params;
+  const { title, description, tag } = req.body;
   if (!title) throw new BadRequestError('Please provide todo title');
-  let queryCreateTodo = `INSERT INTO todos (title, description, user_id) VALUES ('${title}', '${description}', ${userID})`;
-  await db.query(queryCreateTodo);
+  let queryTagID = `SELECT tag_id FROM tags WHERE name = '${tag}'`;
+  const [[result]] = await db.query(queryTagID);
+  const { tag_id: tagID } = result;
+  // console.log(tagID);
+  let queryInsertTodoTag = `INSERT INTO todos_tags (todo_id, tag_id) VALUES(${todoID}, ${tagID})`
+  let queryInsertTodo = `INSERT INTO todos (title, description, user_id) VALUES ('${title}', '${description}', ${userID})`;
+  await db.query(queryInsertTodo);
   res.status(StatusCodes.CREATED).json({ mssg: 'Todo created' });
 };
 
@@ -66,7 +72,6 @@ const updateTodo = async (req, res) => {
   await db.query(queryUpdate);
   res.status(StatusCodes.OK).json({ mssg: 'Todo updated' });
 };
-
 
 //~ Function to delete todo
 const deleteTodo = async (req, res) => {

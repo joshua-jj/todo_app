@@ -48,16 +48,16 @@ const createTask = async (req, res) => {
 
   if (!title) throw new BadRequestError('Please provide task title');
   let queryTasks = `SELECT * FROM tasks WHERE title = '${title}'`;
-  let queryCreateTask;
+  let queryInsertTask;
   if (!deadline) {
     deadline = null;
-    queryCreateTask = `INSERT INTO tasks (title, description, completed, deadline, todo_id) VALUES ('${title}', '${description}', ${isCompleted}, ${deadline}, ${todoID})`;
+    queryInsertTask = `INSERT INTO tasks (title, description, completed, deadline, todo_id) VALUES ('${title}', '${description}', ${isCompleted}, ${deadline}, ${todoID})`;
   } else {
-    queryCreateTask = `INSERT INTO tasks (title, description, completed, deadline, todo_id) VALUES ('${title}', '${description}', ${isCompleted}, '${deadline}', ${todoID})`;
+    queryInsertTask = `INSERT INTO tasks (title, description, completed, deadline, todo_id) VALUES ('${title}', '${description}', ${isCompleted}, '${deadline}', ${todoID})`;
   }
   const [tasks] = await db.query(queryTasks);
   if (tasks.length > 0) throw new BadRequestError('Task already exists');
-  await db.query(queryCreateTask);
+  await db.query(queryInsertTask);
   res.status(StatusCodes.CREATED).json({ mssg: 'Task created' });
 };
 
