@@ -13,10 +13,16 @@ const verifyTodo = async (todoID, userID) => {
   return todo;
 };
 
+//! Function to reset table to auto increment 1
+const resetTable = async (table) => {
+  let queryReset = `ALTER TABLE ${table} AUTO_INCREMENT = 1`;
+  await db.query(queryReset);
+}
+
 //^ Function to get all todos
 const getAllTodos = async (req, res) => {
   const { userID, firstName } = req.user;
-  let queryAllTodos = `SELECT title, description, created_at, updated_at FROM todos WHERE user_id = ${userID}`;
+  let queryAllTodos = `SELECT todos.*, tags.name AS tag FROM todos LEFT JOIN todos_tags ON todos.todo_id = todos_tags.todo_id LEFT JOIN tags ON  todos_tags.tag_id = tags.tag_id WHERE todos.user_id = ${userID}`;
   const [todos] = await db.query(queryAllTodos);
   if (todos.length == 0) throw new BadRequestError('No todos yet.');
   res.status(StatusCodes.OK).json({ mssg: `Welcome, ${firstName}`, todos });
@@ -25,16 +31,26 @@ const getAllTodos = async (req, res) => {
 //& Function to create todo
 const createTodo = async (req, res) => {
   const { userID } = req.user;
-  const { todoID } = req.params;
   const { title, description, tag } = req.body;
   if (!title) throw new BadRequestError('Please provide todo title');
-  let queryTagID = `SELECT tag_id FROM tags WHERE name = '${tag}'`;
-  const [[result]] = await db.query(queryTagID);
-  const { tag_id: tagID } = result;
-  // console.log(tagID);
-  let queryInsertTodoTag = `INSERT INTO todos_tags (todo_id, tag_id) VALUES(${todoID}, ${tagID})`
+  let result, tagID;
+  if (tag) {
+    let queryTagID = `SELECT tag_id FROM tags WHERE name = '${tag}'`;
+    [[result]] = await db.query(queryTagID);
+  }
+  // let { tag_id: tagID } = result;
   let queryInsertTodo = `INSERT INTO todos (title, description, user_id) VALUES ('${title}', '${description}', ${userID})`;
   await db.query(queryInsertTodo);
+  const [[lastID]] = await db.query(`SELECT LAST_INSERT_ID()`);
+
+  //~ Get id of newly inserted todo;
+  const { 'LAST_INSERT_ID()': todoID } = lastID;
+
+  //& Reset todos_tags table to auto increment 1
+  await resetTable('todos_tags');
+  tag ? tagID = result.tag_id : tagID = "";
+  let queryInsertTodoTag = `INSERT INTO todos_tags (todo_id, tag_id) VALUES(${todoID}, ${tagID})`;
+  await db.query(queryInsertTodoTag);
   res.status(StatusCodes.CREATED).json({ mssg: 'Todo created' });
 };
 
@@ -43,13 +59,12 @@ const getTodo = async (req, res) => {
   const { todoID } = req.params;
   const { userID } = req.user;
 
-  // let queryTodo = `SELECT title, description, created_at, updated_at FROM todos where todo_id = ${todoID} AND user_id = ${userID}`;
-  // const [todo] = await db.query(queryTodo);
-  // if (todo.length == 0) {
-  //   throw new NotFoundError(`No todo with id ${todoID}`);
-  // }
+  let queryTodo = `SELECT todos.*, tags.name AS tag FROM todos LEFT JOIN todos_tags ON todos.todo_id = todos_tags.todo_id LEFT JOIN tags ON  todos_tags.tag_id = tags.tag_id WHERE todos.todo_id = ${todoID} AND todos.user_id = ${userID}`;
+  const [todo] = await db.query(queryTodo);
   //* Verify that todo belongs to this user
-  const todo = await verifyTodo(todoID, userID);
+  if (todo.length == 0) {
+    throw new NotFoundError(`No todo with id ${todoID}`);
+  }
   res.status(StatusCodes.OK).json({ todo });
 };
 
@@ -80,7 +95,6 @@ const deleteTodo = async (req, res) => {
 
   // let queryTodo = `SELECT * FROM todos where todo_id = ${todoID} AND user_id = ${userID}`;
   let queryDelete = `DELETE FROM todos WHERE todo_id = ${todoID}`;
-  let queryReset = `ALTER TABLE todos AUTO_INCREMENT = 1`;
 
   // const [todo] = await db.query(queryTodo);
   // if (todo.length == 0) {
@@ -90,8 +104,8 @@ const deleteTodo = async (req, res) => {
   await verifyTodo(todoID, userID);
   await db.query(queryDelete);
 
-  // ^ Reset table to auto increment 1
-  await db.query(queryReset);
+  // ^ Reset todos table to auto increment 1
+  await resetTable('todos');
   res.status(StatusCodes.OK).json({ mssg: 'Todo deleted' });
 };
 
