@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const authRouter = require('./routes/auth');
 const todosRouter = require('./routes/todos');
+const tasksRouter = require('./routes/tasks');
 const notFoundMiddleware = require('./middlewares/not-found');
 const errorHandlerMiddleware = require('./middlewares/error-handler');
 const app = express();
@@ -15,6 +16,7 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use('/api/v1', authRouter);
 app.use('/api/v1/todos', todosRouter);
+app.use('/api/v1/todos', tasksRouter);
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
 
