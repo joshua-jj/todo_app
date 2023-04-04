@@ -19,6 +19,7 @@ const resetTable = async table => {
   await db.query(queryReset);
 };
 
+
 //^ Function to get all todos
 const getAllTodos = async (req, res) => {
   const { userID, firstName } = req.user;
@@ -52,7 +53,7 @@ const createTodo = async (req, res) => {
   } else {
     tagID = null;
   }
-  // tag ? (tagID = result.tag_id) : (tagID = '');
+  
   let queryInsertTodoTag = `INSERT INTO todos_tags (todo_id, tag_id) VALUES(${todoID}, ${tagID})`;
   await db.query(queryInsertTodoTag);
   res.status(StatusCodes.CREATED).json({ mssg: 'Todo created' });
@@ -100,6 +101,7 @@ const updateTodo = async (req, res) => {
   } else {
     tagID = null;
   }
+  
   let queryUpdateTodoTag = `UPDATE todos_tags SET tag_id = ${tagID} WHERE todo_id = ${todoID}`;
   await db.query(queryUpdateTodoTag);
   res.status(StatusCodes.OK).json({ mssg: 'Todo updated' });
@@ -111,7 +113,7 @@ const deleteTodo = async (req, res) => {
   const { userID } = req.user;
 
   // let queryTodo = `SELECT * FROM todos where todo_id = ${todoID} AND user_id = ${userID}`;
-  let queryDelete = `DELETE FROM todos WHERE todo_id = ${todoID}`;
+  let queryDeleteTodo = `DELETE FROM todos WHERE todo_id = ${todoID}`;
 
   // const [todo] = await db.query(queryTodo);
   // if (todo.length == 0) {
@@ -119,7 +121,7 @@ const deleteTodo = async (req, res) => {
   // }
   //* Verify that todo belongs to this use
   await verifyTodo(todoID, userID);
-  await db.query(queryDelete);
+  await db.query(queryDeleteTodo);
 
   // ^ Reset todos table to auto increment 1
   await resetTable('todos');

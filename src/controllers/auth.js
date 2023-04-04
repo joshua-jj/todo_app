@@ -49,7 +49,6 @@ const login = async (req, res) => {
 
   let query = `SELECT * FROM users WHERE username='${username}'`;
   const [[result]] = await db.query(query);
-  console.log(result);
   if (!result) throw new AuthorizationError('Invalid username or password');
 
   let match = await bcrypt.compare(password, result.password);
