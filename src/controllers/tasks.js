@@ -27,7 +27,6 @@ const resetTable = async table => {
   await db.query(queryReset);
 };
 
-
 //^ Function to get all tasks
 const getAllTasks = async (req, res) => {
   const { todoID } = req.params;
@@ -49,13 +48,13 @@ const createTask = async (req, res) => {
   await verifyTodo(todoID, userID);
 
   if (!title) throw new BadRequestError('Please provide task title');
-  let queryTasks = `SELECT * FROM tasks WHERE title = '${title}'`;
+  let queryTasks = `SELECT * FROM tasks WHERE title = "${title}"`;
   let queryInsertTask;
   if (!deadline) {
     deadline = null;
-    queryInsertTask = `INSERT INTO tasks (title, description, completed, deadline, todo_id) VALUES ('${title}', '${description}', ${isCompleted}, ${deadline}, ${todoID})`;
+    queryInsertTask = `INSERT INTO tasks (title, description, completed, deadline, todo_id) VALUES ("${title}", "${description}", ${isCompleted}, ${deadline}, ${todoID})`;
   } else {
-    queryInsertTask = `INSERT INTO tasks (title, description, completed, deadline, todo_id) VALUES ('${title}', '${description}', ${isCompleted}, '${deadline}', ${todoID})`;
+    queryInsertTask = `INSERT INTO tasks (title, description, completed, deadline, todo_id) VALUES ("${title}", "${description}", ${isCompleted}, "${deadline}", ${todoID})`;
   }
   const [tasks] = await db.query(queryTasks);
   if (tasks.length > 0) throw new BadRequestError('Task already exists');
@@ -112,17 +111,13 @@ const updateTask = async (req, res) => {
 
   if (!deadline) {
     deadline = null;
-    queryUpdateTask = `UPDATE tasks SET title = '${title}', description = '${description}', completed = ${isCompleted}, deadline = ${deadline} WHERE id = ${taskID}`;
+    queryUpdateTask = `UPDATE tasks SET title = "${title}", description = "${description}", completed = ${isCompleted}, deadline = ${deadline} WHERE id = ${taskID}`;
   } else {
-    queryUpdateTask = `UPDATE tasks SET title = '${title}', description = '${description}', completed = ${isCompleted}, deadline = '${deadline}' WHERE id = ${taskID}`;
+    queryUpdateTask = `UPDATE tasks SET title = "${title}", description = "${description}", completed = ${isCompleted}, deadline = "${deadline}" WHERE id = ${taskID}`;
   }
 
   //& Verify that task exists
   await verifyTask(taskID, todoID);
-  // const [task] = await db.query(queryTask);
-  // if (task.length == 0) {
-  //   throw new NotFoundError(`No task with id ${taskID}`);
-  // }
   await db.query(queryUpdateTask);
 
   //& Reset tasks_priorities table to auto increment 1
@@ -157,8 +152,30 @@ const deleteTask = async (req, res) => {
   // ^ Reset tasks table to auto increment 1
   await resetTable('tasks');
   res.status(StatusCodes.OK).json({ mssg: 'Task deleted' });
-}; 
+};
 
+const searchTask = async (req, res) => {
+  const { userID } = req.user;
+  const { query } = req.query;
+  // console.log(typeof(query));
+  let querySearch = `
+    SELECT tasks.id, tasks.title AS task_title, todos.title AS todo_title, priorities.name AS priority FROM tasks 
+    JOIN todos ON tasks.todo_id = todos.id
+    JOIN tasks_priorities ON tasks.id = tasks_priorities.task_id 
+    LEFT JOIN priorities ON tasks_priorities.priority_id = priorities.id
+    WHERE todo_id IN (SELECT id FROM todos WHERE user_id = ${userID}) AND tasks.title LIKE "%${query}%"
+    `;
+  const [result] = await db.query(querySearch);
+  console.log(result.length);
+  if (result.length == 0) throw new NotFoundError('No result found');
+  res.status(StatusCodes.OK).json({ result });
+};
 
-
-module.exports = { getAllTasks, createTask, getTask, updateTask, deleteTask };
+module.exports = {
+  getAllTasks,
+  createTask,
+  getTask,
+  updateTask,
+  deleteTask,
+  searchTask,
+};

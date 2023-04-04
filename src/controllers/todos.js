@@ -34,7 +34,7 @@ const createTodo = async (req, res) => {
   const { title, description, tag } = req.body;
   if (!title) throw new BadRequestError('Please provide todo title');
   let result, tagID;
-  let queryInsertTodo = `INSERT INTO todos (title, description, user_id) VALUES ('${title}', '${description}', ${userID})`;
+  let queryInsertTodo = `INSERT INTO todos (title, description, user_id) VALUES ("${title}", "${description}", ${userID})`;
   await db.query(queryInsertTodo);
   const [[lastID]] = await db.query(`SELECT LAST_INSERT_ID()`);
 
@@ -77,7 +77,7 @@ const updateTodo = async (req, res) => {
   const { userID } = req.user;
   const { title, description, tag } = req.body;
   let result, tagID;
-  let queryUpdateTodo = `UPDATE todos SET title = '${title}', description = '${description}' WHERE id = ${todoID}`;
+  let queryUpdateTodo = `UPDATE todos SET title = "${title}", description = "${description}" WHERE id = ${todoID}`;
 
   //* Verify that todo belongs to this user
   await verifyTodo(todoID, userID);

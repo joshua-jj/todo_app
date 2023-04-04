@@ -5,6 +5,7 @@ const {
   getTask,
   updateTask,
   deleteTask,
+  searchTask,
 } = require('../controllers/tasks');
 const authenticateToken = require('../middlewares/auth');
 const router = express.Router();
@@ -18,5 +19,7 @@ router
   .get(authenticateToken, getTask)
   .patch(authenticateToken, updateTask)
   .delete(authenticateToken, deleteTask);
+
+router.route('/').get(authenticateToken, searchTask);
 
 module.exports = router;

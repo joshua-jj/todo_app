@@ -17,6 +17,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use('/api/v1', authRouter);
 app.use('/api/v1/todos', todosRouter);
 app.use('/api/v1/todos', tasksRouter);
+app.use('/api/v1/search', tasksRouter);
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
 
