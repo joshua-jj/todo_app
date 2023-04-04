@@ -157,14 +157,15 @@ const deleteTask = async (req, res) => {
 const searchTask = async (req, res) => {
   const { userID } = req.user;
   const { query } = req.query;
-  // console.log(typeof(query));
+
   let querySearch = `
-    SELECT tasks.id, tasks.title AS task_title, todos.title AS todo_title, priorities.name AS priority FROM tasks 
+    SELECT tasks.id, tasks.title AS task_title, todos.title AS todo_title, priorities.name AS priority
+    FROM tasks 
     JOIN todos ON tasks.todo_id = todos.id
     JOIN tasks_priorities ON tasks.id = tasks_priorities.task_id 
     LEFT JOIN priorities ON tasks_priorities.priority_id = priorities.id
     WHERE todo_id IN (SELECT id FROM todos WHERE user_id = ${userID}) AND tasks.title LIKE "%${query}%"
-    `;
+  `;
   const [result] = await db.query(querySearch);
   console.log(result.length);
   if (result.length == 0) throw new NotFoundError('No result found');
