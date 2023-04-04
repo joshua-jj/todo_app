@@ -34,7 +34,6 @@ const createTodo = async (req, res) => {
   const { title, description, tag } = req.body;
   if (!title) throw new BadRequestError('Please provide todo title');
   let result, tagID;
-  // let { tag_id: tagID } = result;
   let queryInsertTodo = `INSERT INTO todos (title, description, user_id) VALUES ('${title}', '${description}', ${userID})`;
   await db.query(queryInsertTodo);
   const [[lastID]] = await db.query(`SELECT LAST_INSERT_ID()`);
@@ -78,14 +77,8 @@ const updateTodo = async (req, res) => {
   const { userID } = req.user;
   const { title, description, tag } = req.body;
   let result, tagID;
-  // let queryTodo = `SELECT * FROM todos where todo_id = ${todoID} AND user_id = ${userID}`;
   let queryUpdateTodo = `UPDATE todos SET title = '${title}', description = '${description}' WHERE id = ${todoID}`;
 
-  // // * Verify that todo belongs to this user
-  // const [todo] = await db.query(queryTodo);
-  // if (todo.length == 0) {
-  //   throw new NotFoundError(`No todo with id ${todoID}`);
-  // }
   //* Verify that todo belongs to this user
   await verifyTodo(todoID, userID);
   await db.query(queryUpdateTodo);
@@ -111,13 +104,8 @@ const deleteTodo = async (req, res) => {
   const { todoID } = req.params;
   const { userID } = req.user;
 
-  // let queryTodo = `SELECT * FROM todos where todo_id = ${todoID} AND user_id = ${userID}`;
   let queryDeleteTodo = `DELETE FROM todos WHERE id = ${todoID}`;
 
-  // const [todo] = await db.query(queryTodo);
-  // if (todo.length == 0) {
-  //   throw new NotFoundError(`No todo with id ${todoID}`);
-  // }
   //* Verify that todo belongs to this use
   await verifyTodo(todoID, userID);
   await db.query(queryDeleteTodo);

@@ -45,11 +45,6 @@ const createTask = async (req, res) => {
   let result, priorityID;
   const isCompleted = completed === 'on';
 
-  // let queryTask = `SELECT * FROM todos where todo_id = ${todoID} AND user_id = ${userID}`;
-  // const [todo] = await db.query(queryTodo);
-  // if (todo.length == 0) {
-  //   throw new NotFoundError(`No todo with id ${todoID}`);
-  // }
   //* Verify that todo belongs to this user
   await verifyTodo(todoID, userID);
 
@@ -93,15 +88,8 @@ const getTask = async (req, res) => {
 
   //* Verify that todo belongs to this user
   await verifyTodo(todoID, userID);
-  // let queryTodo = `SELECT * FROM todos where todo_id = ${todoID} AND user_id = ${userID}`;
-
-  // const [todo] = await db.query(queryTodo);
-  // if (todo.length == 0) {
-  //   throw new NotFoundError(`No todo with id ${todoID}`);
-  // }
 
   //& Verify that task exists and belongs to the todo_id
-  // const task = await verifyTask(taskID, todoID);
   let queryTask = `SELECT tasks.*, priorities.name AS priority FROM tasks LEFT JOIN tasks_priorities ON tasks.id = tasks_priorities.task_id LEFT JOIN priorities ON  tasks_priorities.priority_id = priorities.id WHERE tasks.id = ${taskID} AND tasks.todo_id = ${todoID}`;
   const [task] = await db.query(queryTask);
   if (task.length == 0) {
@@ -120,13 +108,6 @@ const updateTask = async (req, res) => {
 
   //* Verify that todo belongs to this user
   await verifyTodo(todoID, userID);
-  // let queryTodo = `SELECT * FROM todos where todo_id = ${todoID} AND user_id = ${userID}`;
-
-  // const [todo] = await db.query(queryTodo);
-  // if (todo.length == 0) {
-  //   throw new NotFoundError(`No todo with id ${todoID}`);
-  // }
-  // let queryTask = `SELECT * FROM tasks WHERE task_id = ${taskID} AND todo_id = ${todoID}`;
   let queryUpdateTask;
 
   if (!deadline) {
@@ -167,29 +148,17 @@ const deleteTask = async (req, res) => {
 
   //* Verify that todo belongs to this user
   await verifyTodo(todoID, userID);
-  // let queryTodo = `SELECT title, description, created_at, updated_at FROM todos where todo_id = ${todoID} AND user_id = ${userID}`;
-
-  // const [todo] = await db.query(queryTodo);
-  // if (todo.length == 0) {
-  //   throw new NotFoundError(`No todo with id ${todoID}`);
-  // }
-
-  // let queryTask = `SELECT * FROM tasks WHERE task_id = ${taskID} AND todo_id = ${todoID}`;
   let queryDeleteTask = `DELETE FROM tasks WHERE id = ${taskID}`;
-  // let queryReset = `ALTER TABLE tasks AUTO_INCREMENT = 1`;
 
   //& Verify that task exists or belongs to the todo_id
   await verifyTask(taskID, todoID);
-  // const [task] = await db.query(queryTask);
-  // if (task.length == 0) {
-  //   throw new NotFoundError(`No task with id ${taskID}`);
-  // }
   await db.query(queryDeleteTask);
 
   // ^ Reset tasks table to auto increment 1
-  // await db.query(queryReset);
   await resetTable('tasks');
   res.status(StatusCodes.OK).json({ mssg: 'Task deleted' });
-};
+}; 
+
+
 
 module.exports = { getAllTasks, createTask, getTask, updateTask, deleteTask };
