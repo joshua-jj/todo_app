@@ -5,12 +5,11 @@ const { BadRequestError, NotFoundError } = require('../errors');
 
 // * Function to verify if todo belongs to the logged in user
 const verifyTodo = async (todoID, userID) => {
-  let queryTodo = `SELECT title, description, created_at, updated_at FROM todos where todo_id = ${todoID} AND user_id = ${userID}`;
+  let queryTodo = `SELECT * FROM todos where id = ${todoID} AND user_id = ${userID}`;
   const [todo] = await db.query(queryTodo);
   if (todo.length == 0) {
     throw new NotFoundError(`No todo with id ${todoID}`);
   }
-  return todo;
 };
 
 //! Function to reset table to auto increment 1
@@ -23,7 +22,7 @@ const resetTable = async table => {
 //^ Function to get all todos
 const getAllTodos = async (req, res) => {
   const { userID, firstName } = req.user;
-  let queryAllTodos = `SELECT todos.*, tags.name AS tag FROM todos LEFT JOIN todos_tags ON todos.todo_id = todos_tags.todo_id LEFT JOIN tags ON  todos_tags.tag_id = tags.tag_id WHERE todos.user_id = ${userID}`;
+  let queryAllTodos = `SELECT todos.*, tags.name AS tag FROM todos LEFT JOIN todos_tags ON todos.id = todos_tags.todo_id LEFT JOIN tags ON  todos_tags.tag_id = tags.id WHERE todos.user_id = ${userID}`;
   const [todos] = await db.query(queryAllTodos);
   if (todos.length == 0) throw new BadRequestError('No todos yet.');
   res.status(StatusCodes.OK).json({ mssg: `Welcome, ${firstName}`, todos });
@@ -47,9 +46,9 @@ const createTodo = async (req, res) => {
   await resetTable('todos_tags');
 
   if (tag) {
-    let queryTagID = `SELECT tag_id FROM tags WHERE name = '${tag}'`;
+    let queryTagID = `SELECT id FROM tags WHERE name = '${tag}'`;
     [[result]] = await db.query(queryTagID);
-    tagID = result.tag_id;
+    tagID = result.id;
   } else {
     tagID = null;
   }
@@ -64,7 +63,7 @@ const getTodo = async (req, res) => {
   const { todoID } = req.params;
   const { userID } = req.user;
 
-  let queryTodo = `SELECT todos.*, tags.name AS tag FROM todos LEFT JOIN todos_tags ON todos.todo_id = todos_tags.todo_id LEFT JOIN tags ON  todos_tags.tag_id = tags.tag_id WHERE todos.todo_id = ${todoID} AND todos.user_id = ${userID}`;
+  let queryTodo = `SELECT todos.*, tags.name AS tag FROM todos LEFT JOIN todos_tags ON todos.id = todos_tags.todo_id LEFT JOIN tags ON  todos_tags.tag_id = tags.id WHERE todos.id = ${todoID} AND todos.user_id = ${userID}`;
   const [todo] = await db.query(queryTodo);
   //* Verify that todo belongs to this user
   if (todo.length == 0) {
@@ -80,7 +79,7 @@ const updateTodo = async (req, res) => {
   const { title, description, tag } = req.body;
   let result, tagID;
   // let queryTodo = `SELECT * FROM todos where todo_id = ${todoID} AND user_id = ${userID}`;
-  let queryUpdateTodo = `UPDATE todos SET title = '${title}', description = '${description}' WHERE todo_id = ${todoID}`;
+  let queryUpdateTodo = `UPDATE todos SET title = '${title}', description = '${description}' WHERE id = ${todoID}`;
 
   // // * Verify that todo belongs to this user
   // const [todo] = await db.query(queryTodo);
@@ -95,9 +94,9 @@ const updateTodo = async (req, res) => {
   await resetTable('todos_tags');
 
   if (tag) {
-    let queryTagID = `SELECT tag_id FROM tags WHERE name = '${tag}'`;
+    let queryTagID = `SELECT id FROM tags WHERE name = '${tag}'`;
     [[result]] = await db.query(queryTagID);
-    tagID = result.tag_id;
+    tagID = result.id;
   } else {
     tagID = null;
   }
@@ -113,7 +112,7 @@ const deleteTodo = async (req, res) => {
   const { userID } = req.user;
 
   // let queryTodo = `SELECT * FROM todos where todo_id = ${todoID} AND user_id = ${userID}`;
-  let queryDeleteTodo = `DELETE FROM todos WHERE todo_id = ${todoID}`;
+  let queryDeleteTodo = `DELETE FROM todos WHERE id = ${todoID}`;
 
   // const [todo] = await db.query(queryTodo);
   // if (todo.length == 0) {

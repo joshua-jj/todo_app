@@ -5,7 +5,7 @@ const { BadRequestError, NotFoundError } = require('../errors');
 
 // * Function to verify that todo belongs to the logged in user
 const verifyTodo = async (todoID, userID) => {
-  let queryTodo = `SELECT * FROM todos where todo_id = ${todoID} AND user_id = ${userID}`;
+  let queryTodo = `SELECT * FROM todos where id = ${todoID} AND user_id = ${userID}`;
   const [todo] = await db.query(queryTodo);
   if (todo.length == 0) {
     throw new NotFoundError(`No todo with id ${todoID}`);
@@ -14,12 +14,11 @@ const verifyTodo = async (todoID, userID) => {
 
 // ? Function to verify that task belongs to belongs to the todo_id
 const verifyTask = async (taskID, todoID) => {
-  let queryTask = `SELECT title, description, completed, deadline, created_at, updated_at FROM tasks where task_id = ${taskID} AND todo_id = ${todoID}`;
+  let queryTask = `SELECT * FROM tasks where id = ${taskID} AND todo_id = ${todoID}`;
   const [task] = await db.query(queryTask);
   if (task.length == 0) {
     throw new NotFoundError(`No task with id ${taskID}`);
   }
-  return task;
 };
 
 //! Function to reset table to auto increment 1
@@ -32,7 +31,7 @@ const resetTable = async table => {
 //^ Function to get all tasks
 const getAllTasks = async (req, res) => {
   const { todoID } = req.params;
-  let queryAllTasks = `SELECT tasks.*, priorities.name AS priority FROM tasks LEFT JOIN tasks_priorities ON tasks.task_id = tasks_priorities.task_id LEFT JOIN priorities ON  tasks_priorities.priority_id = priorities.priority_id WHERE tasks.todo_id = ${todoID}`;
+  let queryAllTasks = `SELECT tasks.*, priorities.name AS priority FROM tasks LEFT JOIN tasks_priorities ON tasks.id = tasks_priorities.task_id LEFT JOIN priorities ON  tasks_priorities.priority_id = priorities.id WHERE tasks.todo_id = ${todoID}`;
   const [tasks] = await db.query(queryAllTasks);
   if (tasks.length == 0) throw new BadRequestError('No tasks yet.');
   res.status(StatusCodes.OK).json({ tasks });
@@ -75,9 +74,9 @@ const createTask = async (req, res) => {
   await resetTable('tasks_priorities');
 
   if (priority) {
-    let queryPriorityID = `SELECT priority_id FROM priorities WHERE name = '${priority}'`;
+    let queryPriorityID = `SELECT id FROM priorities WHERE name = '${priority}'`;
     [[result]] = await db.query(queryPriorityID);
-    priorityID = result.priority_id;
+    priorityID = result.id;
   } else {
     priorityID = null;
   }
@@ -103,7 +102,7 @@ const getTask = async (req, res) => {
 
   //& Verify that task exists and belongs to the todo_id
   // const task = await verifyTask(taskID, todoID);
-  let queryTask = `SELECT tasks.*, priorities.name AS priority FROM tasks LEFT JOIN tasks_priorities ON tasks.task_id = tasks_priorities.task_id LEFT JOIN priorities ON  tasks_priorities.priority_id = priorities.priority_id WHERE tasks.task_id = ${taskID} AND tasks.todo_id = ${todoID}`;
+  let queryTask = `SELECT tasks.*, priorities.name AS priority FROM tasks LEFT JOIN tasks_priorities ON tasks.id = tasks_priorities.task_id LEFT JOIN priorities ON  tasks_priorities.priority_id = priorities.id WHERE tasks.id = ${taskID} AND tasks.todo_id = ${todoID}`;
   const [task] = await db.query(queryTask);
   if (task.length == 0) {
     throw new NotFoundError(`No task with id ${taskID}`);
@@ -132,9 +131,9 @@ const updateTask = async (req, res) => {
 
   if (!deadline) {
     deadline = null;
-    queryUpdateTask = `UPDATE tasks SET title = '${title}', description = '${description}', completed = ${isCompleted}, deadline = ${deadline} WHERE task_id = ${taskID}`;
+    queryUpdateTask = `UPDATE tasks SET title = '${title}', description = '${description}', completed = ${isCompleted}, deadline = ${deadline} WHERE id = ${taskID}`;
   } else {
-    queryUpdateTask = `UPDATE tasks SET title = '${title}', description = '${description}', completed = ${isCompleted}, deadline = '${deadline}' WHERE task_id = ${taskID}`;
+    queryUpdateTask = `UPDATE tasks SET title = '${title}', description = '${description}', completed = ${isCompleted}, deadline = '${deadline}' WHERE id = ${taskID}`;
   }
 
   //& Verify that task exists
@@ -149,9 +148,9 @@ const updateTask = async (req, res) => {
   await resetTable('tasks_priorities');
 
   if (priority) {
-    let queryPriorityID = `SELECT priority_id FROM priorities WHERE name = '${priority}'`;
+    let queryPriorityID = `SELECT id FROM priorities WHERE name = '${priority}'`;
     [[result]] = await db.query(queryPriorityID);
-    priorityID = result.priority_id;
+    priorityID = result.id;
   } else {
     priorityID = null;
   }
@@ -176,7 +175,7 @@ const deleteTask = async (req, res) => {
   // }
 
   // let queryTask = `SELECT * FROM tasks WHERE task_id = ${taskID} AND todo_id = ${todoID}`;
-  let queryDeleteTask = `DELETE FROM tasks WHERE task_id = ${taskID}`;
+  let queryDeleteTask = `DELETE FROM tasks WHERE id = ${taskID}`;
   // let queryReset = `ALTER TABLE tasks AUTO_INCREMENT = 1`;
 
   //& Verify that task exists or belongs to the todo_id

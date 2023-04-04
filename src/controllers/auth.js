@@ -33,9 +33,9 @@ const register = async (req, res) => {
 
   //! Hash password
   const hash = await bcrypt.hash(password, 10);
-  let queryInsert = `INSERT INTO users (first_name, last_name, username, email, password) VALUES ('${firstName}', '${lastName}','${username}', '${email}', '${hash}')`;
+  let queryInsertUser = `INSERT INTO users (first_name, last_name, username, email, password) VALUES ('${firstName}', '${lastName}','${username}', '${email}', '${hash}')`;
 
-  await db.query(queryInsert);
+  await db.query(queryInsertUser);
   res.status(StatusCodes.CREATED).json({ mssg: 'User created' });
 };
 
@@ -54,7 +54,7 @@ const login = async (req, res) => {
   let match = await bcrypt.compare(password, result.password);
 
   if (!match) throw new AuthorizationError('Invalid username or password');
-  const { user_id: userID, first_name: firstName } = result;
+  const { id: userID, first_name: firstName } = result;
   const token = jwt.sign({ userID, firstName }, process.env.ACCESS_TOKEN_SECRET, {
     expiresIn: '60d',
   });
