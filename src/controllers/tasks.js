@@ -30,7 +30,31 @@ const resetTable = async table => {
 //^ Function to get all tasks
 const getAllTasks = async (req, res) => {
   const { todoID } = req.params;
+  const { userID } = req.user;
+  let { sortBy, sortOrder } = req.query;
+
+  //* Verify that todo belongs to this user
+  await verifyTodo(todoID, userID);
+
   let queryAllTasks = `SELECT tasks.*, priorities.name AS priority FROM tasks LEFT JOIN tasks_priorities ON tasks.id = tasks_priorities.task_id LEFT JOIN priorities ON  tasks_priorities.priority_id = priorities.id WHERE tasks.todo_id = ${todoID}`;
+  sortOrder = sortOrder || 'asc';
+
+  if (sortBy && sortBy == 'title') {
+    queryAllTasks = `SELECT tasks.*, priorities.name AS priority FROM tasks LEFT JOIN tasks_priorities ON tasks.id = tasks_priorities.task_id LEFT JOIN priorities ON  tasks_priorities.priority_id = priorities.id WHERE tasks.todo_id = ${todoID} ORDER BY tasks.title ${sortOrder}`;
+  }
+
+  if (sortBy && sortBy == 'last updated') {
+    queryAllTasks = `SELECT tasks.*, priorities.name AS priority FROM tasks LEFT JOIN tasks_priorities ON tasks.id = tasks_priorities.task_id LEFT JOIN priorities ON  tasks_priorities.priority_id = priorities.id WHERE tasks.todo_id = ${todoID} ORDER BY tasks.updated_at ${sortOrder}`;
+  }
+  
+  if (sortBy && sortBy !== 'title' && sortBy !== 'last updated') {
+    throw new BadRequestError('Invalid sort criteria');
+  }
+
+  if (sortOrder && sortOrder !== 'asc' && sortOrder !== 'desc') {
+    throw new BadRequestError('Invalid sort criteria');
+  }
+  
   const [tasks] = await db.query(queryAllTasks);
   if (tasks.length == 0) throw new BadRequestError('No tasks yet.');
   res.status(StatusCodes.OK).json({ tasks });
