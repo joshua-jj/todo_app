@@ -85,6 +85,8 @@ const createTask = async (req, res) => {
   }
   const [tasks] = await db.query(queryTasks);
   if (tasks.length > 0) throw new BadRequestError('Task already exists');
+
+  //& Insert into task table
   await db.query(queryInsertTask);
   const [[lastID]] = await db.query(`SELECT LAST_INSERT_ID()`);
 
@@ -103,6 +105,8 @@ const createTask = async (req, res) => {
   }
   let queryInsertTaskPriority = `INSERT INTO tasks_priorities (task_id, priority_id) VALUES(${taskID}, ${priorityID})`;
   await db.query(queryInsertTaskPriority);
+
+  let queryInsertFiles = `INSERT INTO tasks_priorities (task_id, priority_id) VALUES(${taskID}, ${priorityID})`;
 
   res.status(StatusCodes.CREATED).json({ mssg: 'Task created' });
 };
@@ -143,7 +147,7 @@ const updateTask = async (req, res) => {
     queryUpdateTask = `UPDATE tasks SET title = "${title}", description = "${description}", completed = ${isCompleted}, deadline = "${deadline}" WHERE id = ${taskID}`;
   }
 
-  //& Function to verify that task exists in the todo
+  //& verify that task exists in the todo
   await verifyTask(taskID, todoID);
   await db.query(queryUpdateTask);
 

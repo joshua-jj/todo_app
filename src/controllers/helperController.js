@@ -15,7 +15,7 @@ const verifyTodo = async (todoID, userID) => {
 const verifyTask = async (taskID, todoID) => {
   let queryTask = `SELECT * FROM tasks where id = ${taskID} AND todo_id = ${todoID}`;
   const [task] = await db.query(queryTask);
-  if (task.length == 0) {
+  if (task.length == 0) { 
     throw new NotFoundError('Task does not exist');
   }
 };

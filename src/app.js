@@ -24,6 +24,7 @@ const port = process.env.PORT || 5000;
 //~ middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(fileUpload({ useTempFiles: true }));
 
 app.use('/api/v1', authRouter);
 app.use('/api/v1/todos', todosRouter);
