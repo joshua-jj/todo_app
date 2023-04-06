@@ -38,7 +38,7 @@ const getAllTasks = async (req, res) => {
   //* Verify that todo belongs to this user
   await verifyTodo(todoID, userID);
 
-  let queryAllTasks = `SELECT tasks.*, priorities.name AS priority FROM tasks LEFT JOIN tasks_priorities ON tasks.id = tasks_priorities.task_id LEFT JOIN priorities ON  tasks_priorities.priority_id = priorities.id WHERE tasks.todo_id = ${todoID}`;
+  let queryAllTasks = `SELECT tasks.*, priorities.name AS priority FROM tasks LEFT JOIN tasks_priorities ON tasks.id = tasks_priorities.task_id LEFT JOIN priorities ON tasks_priorities.priority_id = priorities.id WHERE tasks.todo_id = ${todoID}`;
 
   //& Query to sort tasks by title
   if (sortBy && sortBy == 'title') {
@@ -67,7 +67,7 @@ const getAllTasks = async (req, res) => {
 const createTask = async (req, res) => {
   const { todoID } = req.params;
   const { userID } = req.user;
-  let { title, description, completed, deadline, priority } = req.body;
+  let { title, description, completed, deadline, priority, file } = req.body;
   let result, priorityID;
   const isCompleted = completed === 'on';
 
@@ -79,14 +79,14 @@ const createTask = async (req, res) => {
   let queryInsertTask;
   if (!deadline) {
     deadline = null;
-    queryInsertTask = `INSERT INTO tasks (title, description, completed, deadline, todo_id) VALUES ("${title}", "${description}", ${isCompleted}, ${deadline}, ${todoID})`;
+    queryInsertTask = `INSERT INTO tasks (title, description, completed, deadline, file, todo_id) VALUES ("${title}", "${description}", ${isCompleted}, ${deadline}, "${file}", ${todoID})`;
   } else {
-    queryInsertTask = `INSERT INTO tasks (title, description, completed, deadline, todo_id) VALUES ("${title}", "${description}", ${isCompleted}, "${deadline}", ${todoID})`;
+    queryInsertTask = `INSERT INTO tasks (title, description, completed, deadline, todo_id) VALUES ("${title}", "${description}", ${isCompleted}, "${deadline}", "${file}", ${todoID})`;
   }
   const [tasks] = await db.query(queryTasks);
   if (tasks.length > 0) throw new BadRequestError('Task already exists');
 
-  //& Insert into task table
+  //? Insert into task table
   await db.query(queryInsertTask);
   const [[lastID]] = await db.query(`SELECT LAST_INSERT_ID()`);
 
@@ -104,10 +104,9 @@ const createTask = async (req, res) => {
     priorityID = null;
   }
   let queryInsertTaskPriority = `INSERT INTO tasks_priorities (task_id, priority_id) VALUES(${taskID}, ${priorityID})`;
+
+  //? Insert into task_priority table
   await db.query(queryInsertTaskPriority);
-
-  let queryInsertFiles = `INSERT INTO tasks_priorities (task_id, priority_id) VALUES(${taskID}, ${priorityID})`;
-
   res.status(StatusCodes.CREATED).json({ mssg: 'Task created' });
 };
 
@@ -132,7 +131,7 @@ const getTask = async (req, res) => {
 const updateTask = async (req, res) => {
   const { todoID, taskID } = req.params;
   const { userID } = req.user;
-  let { title, description, completed, deadline, priority } = req.body;
+  let { title, description, completed, deadline, priority, file } = req.body;
   let result, priorityID;
   const isCompleted = completed === 'on';
 
@@ -142,9 +141,9 @@ const updateTask = async (req, res) => {
 
   if (!deadline) {
     deadline = null;
-    queryUpdateTask = `UPDATE tasks SET title = "${title}", description = "${description}", completed = ${isCompleted}, deadline = ${deadline} WHERE id = ${taskID}`;
+    queryUpdateTask = `UPDATE tasks SET title = "${title}", description = "${description}", completed = ${isCompleted}, deadline = ${deadline}, file = "${file}" WHERE id = ${taskID}`;
   } else {
-    queryUpdateTask = `UPDATE tasks SET title = "${title}", description = "${description}", completed = ${isCompleted}, deadline = "${deadline}" WHERE id = ${taskID}`;
+    queryUpdateTask = `UPDATE tasks SET title = "${title}", description = "${description}", completed = ${isCompleted}, deadline = "${deadline}", file = "${file}" WHERE id = ${taskID}`;
   }
 
   //& verify that task exists in the todo
@@ -163,6 +162,8 @@ const updateTask = async (req, res) => {
   }
 
   let queryUpdateTaskPriority = `UPDATE tasks_priorities SET priority_id = ${priorityID} WHERE task_id = ${taskID}`;
+
+  //? Update Priority table
   await db.query(queryUpdateTaskPriority);
   res.status(StatusCodes.OK).json({ mssg: 'Task updated' });
 };
