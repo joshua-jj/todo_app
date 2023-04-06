@@ -1,11 +1,11 @@
 require('dotenv').config(); 
 
 const express = require('express');
-const authRouter = require('./routes/auth');
-const todosRouter = require('./routes/todos');
-const tasksRouter = require('./routes/tasks');
-const notFoundMiddleware = require('./middlewares/not-found');
-const errorHandlerMiddleware = require('./middlewares/error-handler');
+const authRouter = require('./routes/authRoute');
+const todosRouter = require('./routes/todosRoute');
+const tasksRouter = require('./routes/tasksRoute');
+const notFoundMiddleware = require('./middlewares/notFoundMiddleware');
+const errorHandlerMiddleware = require('./middlewares/errorHandlerMiddleware');
 const app = express();
 
 const port = process.env.PORT || 5000;

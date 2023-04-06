@@ -13,13 +13,9 @@ const register = async (req, res) => {
     throw new BadRequestError('Please provide all fields.');
   }
 
-  if (username.includes(' ')) {
-    throw new BadRequestError('Username cannot contain whitespace')
-  }
+  if (username.includes(' ')) throw new BadRequestError('Username cannot contain whitespace');
 
-  if (password !== confirmPassword) {
-    throw new BadRequestError("Passwords don't match.");
-  }
+  if (password !== confirmPassword) throw new BadRequestError("Passwords don't match.");
 
   let queryUser = `SELECT * FROM users where username='${username}'`;
   let [result] = await db.query(queryUser);

@@ -6,8 +6,8 @@ const {
   updateTask,
   deleteTask,
   searchTask,
-} = require('../controllers/tasks');
-const authenticateToken = require('../middlewares/auth');
+} = require('../controllers/tasksController');
+const authenticateToken = require('../middlewares/authMiddleware');
 const router = express.Router();
 
 router
