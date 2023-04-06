@@ -1,30 +1,32 @@
 const db = require('../db/connect');
 const { StatusCodes } = require('http-status-codes');
 const { BadRequestError, NotFoundError } = require('../errors');
+const { verifyTodo, verifyTask, resetTable } = require('./helperController');
 
-// * Function to verify that todo belongs to the logged in user
-const verifyTodo = async (todoID, userID) => {
-  let queryTodo = `SELECT * FROM todos where id = ${todoID} AND user_id = ${userID}`;
-  const [todo] = await db.query(queryTodo);
-  if (todo.length == 0) {
-    throw new NotFoundError(`No todo with id ${todoID}`);
-  }
-};
+// // * Function to verify that todo belongs to the logged in user
+// const verifyTodo = async (todoID, userID) => {
+//   let queryTodo = `SELECT * FROM todos where id = ${todoID} AND user_id = ${userID}`;
+//   const [todo] = await db.query(queryTodo);
+//   if (todo.length == 0) {
+//     throw new NotFoundError('Todo does not exist');
+//   }
+// };
 
-// ? Function to verify that task belongs to belongs to the todo_id
-const verifyTask = async (taskID, todoID) => {
-  let queryTask = `SELECT * FROM tasks where id = ${taskID} AND todo_id = ${todoID}`;
-  const [task] = await db.query(queryTask);
-  if (task.length == 0) {
-    throw new NotFoundError(`No task with id ${taskID}`);
-  }
-};
 
-//! Function to reset table to auto increment 1
-const resetTable = async table => {
-  let queryReset = `ALTER TABLE ${table} AUTO_INCREMENT = 1`;
-  await db.query(queryReset);
-};
+// // ? Function to verify that task belongs to belongs to the todo_id
+// const verifyTask = async (taskID, todoID) => {
+//   let queryTask = `SELECT * FROM tasks where id = ${taskID} AND todo_id = ${todoID}`;
+//   const [task] = await db.query(queryTask);
+//   if (task.length == 0) {
+//     throw new NotFoundError('Task does not exist');
+//   }
+// };
+
+// //! Function to reset table to auto increment 1
+// const resetTable = async table => {
+//   let queryReset = `ALTER TABLE ${table} AUTO_INCREMENT = 1`;
+//   await db.query(queryReset);
+// };
 
 //^ Function to get all tasks
 const getAllTasks = async (req, res) => {
@@ -113,11 +115,11 @@ const getTask = async (req, res) => {
   //* Verify that todo belongs to this user
   await verifyTodo(todoID, userID);
 
-  //& Verify that task exists and belongs to the todo_id
+  //& Verify that task exists in the todo
   let queryTask = `SELECT tasks.*, priorities.name AS priority FROM tasks LEFT JOIN tasks_priorities ON tasks.id = tasks_priorities.task_id LEFT JOIN priorities ON  tasks_priorities.priority_id = priorities.id WHERE tasks.id = ${taskID} AND tasks.todo_id = ${todoID}`;
   const [task] = await db.query(queryTask);
   if (task.length == 0) {
-    throw new NotFoundError(`No task with id ${taskID}`);
+    throw new NotFoundError('Task does not exist');
   }
   res.status(StatusCodes.OK).json({ task });
 };
@@ -141,7 +143,7 @@ const updateTask = async (req, res) => {
     queryUpdateTask = `UPDATE tasks SET title = "${title}", description = "${description}", completed = ${isCompleted}, deadline = "${deadline}" WHERE id = ${taskID}`;
   }
 
-  //& Verify that task exists
+  //& Function to verify that task exists in the todo
   await verifyTask(taskID, todoID);
   await db.query(queryUpdateTask);
 
@@ -170,7 +172,7 @@ const deleteTask = async (req, res) => {
   await verifyTodo(todoID, userID);
   let queryDeleteTask = `DELETE FROM tasks WHERE id = ${taskID}`;
 
-  //& Verify that task exists or belongs to the todo_id
+  //& Verify that task exists in the todo
   await verifyTask(taskID, todoID);
   await db.query(queryDeleteTask);
 

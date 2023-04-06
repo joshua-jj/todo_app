@@ -1,21 +1,22 @@
 const db = require('../db/connect');
 const { StatusCodes } = require('http-status-codes');
 const { BadRequestError, NotFoundError } = require('../errors');
+const { verifyTodo, resetTable } = require('./helperController');
 
-// * Function to verify if todo belongs to the logged in user
-const verifyTodo = async (todoID, userID) => {
-  let queryTodo = `SELECT * FROM todos where id = ${todoID} AND user_id = ${userID}`;
-  const [todo] = await db.query(queryTodo);
-  if (todo.length == 0) {
-    throw new NotFoundError(`No todo with id ${todoID}`);
-  }
-};
+// // * Function to verify if todo belongs to the logged in user
+// const verifyTodo = async (todoID, userID) => {
+//   let queryTodo = `SELECT * FROM todos where id = ${todoID} AND user_id = ${userID}`;
+//   const [todo] = await db.query(queryTodo);
+//   if (todo.length == 0) {
+//     throw new NotFoundError('Todo does not exist');
+//   }
+// };
 
-//! Function to reset table to auto increment 1
-const resetTable = async table => {
-  let queryReset = `ALTER TABLE ${table} AUTO_INCREMENT = 1`;
-  await db.query(queryReset);
-};
+// //! Function to reset table to auto increment 1
+// const resetTable = async table => {
+//   let queryReset = `ALTER TABLE ${table} AUTO_INCREMENT = 1`;
+//   await db.query(queryReset);
+// };
 
 
 //^ Function to get all todos
@@ -63,9 +64,9 @@ const getTodo = async (req, res) => {
 
   let queryTodo = `SELECT todos.*, tags.name AS tag FROM todos LEFT JOIN todos_tags ON todos.id = todos_tags.todo_id LEFT JOIN tags ON  todos_tags.tag_id = tags.id WHERE todos.id = ${todoID} AND todos.user_id = ${userID}`;
   const [todo] = await db.query(queryTodo);
-  //* Verify that todo belongs to this user
+  //* Verify that todo exist and belongs to this user
   if (todo.length == 0) {
-    throw new NotFoundError(`No todo with id ${todoID}`);
+    throw new NotFoundError('Todo does not exist');
   }
   res.status(StatusCodes.OK).json({ todo });
 };
@@ -78,7 +79,7 @@ const updateTodo = async (req, res) => {
   let result, tagID;
   let queryUpdateTodo = `UPDATE todos SET title = "${title}", description = "${description}" WHERE id = ${todoID}`;
 
-  //* Verify that todo belongs to this user
+  //* Verify that todo exists and belongs to this user
   await verifyTodo(todoID, userID);
   await db.query(queryUpdateTodo);
 
@@ -92,7 +93,7 @@ const updateTodo = async (req, res) => {
   } else {
     tagID = null;
   }
-  
+
   let queryUpdateTodoTag = `UPDATE todos_tags SET tag_id = ${tagID} WHERE todo_id = ${todoID}`;
   await db.query(queryUpdateTodoTag);
   res.status(StatusCodes.OK).json({ mssg: 'Todo updated' });
@@ -105,7 +106,7 @@ const deleteTodo = async (req, res) => {
 
   let queryDeleteTodo = `DELETE FROM todos WHERE id = ${todoID}`;
 
-  //* Verify that todo belongs to this use
+  //* Verify that todo belongs to this user
   await verifyTodo(todoID, userID);
   await db.query(queryDeleteTodo);
 
