@@ -1,5 +1,4 @@
 const db = require('../db/connect');
-require('express-async-errors');
 const { StatusCodes } = require('http-status-codes');
 const { BadRequestError, NotFoundError } = require('../errors');
 
