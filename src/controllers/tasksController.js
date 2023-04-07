@@ -1,7 +1,7 @@
 const db = require('../db/connect');
 const { StatusCodes } = require('http-status-codes');
 const { BadRequestError, NotFoundError } = require('../errors');
-const { verifyTodo, verifyTask, resetTable } = require('./helperController');
+const { verifyTodo, verifyTask } = require('./helperController');
 
 // Function to insert files into task table
 const insertFiles = async (file, taskID) => {
@@ -77,18 +77,12 @@ const createTask = async (req, res) => {
   const [tasks] = await db.query(queryTasks);
   if (tasks.length > 0) throw new BadRequestError('Task already exists');
 
-  // Reset tasks table to auto increment 1
-  await resetTable('tasks');
-
   // Insert into task table
   await db.query(queryInsertTask);
   const [[lastID]] = await db.query(`SELECT LAST_INSERT_ID()`);
 
   // Get id of newly inserted task;
   const { 'LAST_INSERT_ID()': taskID } = lastID;
-
-  // Reset tasks_priorities table to auto increment 1
-  await resetTable('tasks_priorities');
 
   if (priority) {
     let queryPriorityID = `SELECT id FROM priorities WHERE name = '${priority}'`;
@@ -101,9 +95,6 @@ const createTask = async (req, res) => {
 
   // Insert into task_priority table
   await db.query(queryInsertTaskPriority);
-
-  // Reset files table to auto increment 1
-  await resetTable('files');
 
   // Insert into files table
   await insertFiles(file, taskID);
@@ -150,9 +141,6 @@ const updateTask = async (req, res) => {
   await verifyTask(taskID, todoID);
   await db.query(queryUpdateTask);
 
-  // Reset tasks_priorities table to auto increment 1
-  await resetTable('tasks_priorities');
-
   // Update Priority table
   if (priority) {
     let queryPriorityID = `SELECT id FROM priorities WHERE name = '${priority}'`;
@@ -169,9 +157,6 @@ const updateTask = async (req, res) => {
   // Delete files from file table
   let queryDeleteFile = `DELETE FROM files WHERE task_id = ${taskID}`
   await db.query(queryDeleteFile);
-
-  // Reset files table to auto increment 1
-  await resetTable('files');
 
   // Insert files into file table
   await insertFiles(file, taskID);
@@ -191,8 +176,6 @@ const deleteTask = async (req, res) => {
   await verifyTask(taskID, todoID);
   await db.query(queryDeleteTask);
 
-  // Reset tasks table to auto increment 1
-  await resetTable('tasks');
   res.status(StatusCodes.OK).json({ mssg: 'Task deleted' });
 };
 

@@ -2,7 +2,7 @@ const db = require('../db/connect');
 const path = require('path');
 const { unlinkSync } = require('fs');
 const { StatusCodes } = require('http-status-codes');
-const { BadRequestError, NotFoundError } = require('../errors');
+const { BadRequestError } = require('../errors');
 const cloudinary = require('cloudinary').v2;
 const { verifyTodo } = require('./helperController');
 
