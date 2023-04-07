@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const { StatusCodes } = require('http-status-codes');
 const { BadRequestError, AuthorizationError } = require('../errors');
 
-//* Function to register new users 
+// Function to register new users 
 
 const register = async (req, res) => {
   const { firstName, lastName, username, email, password, confirmPassword } = req.body;
@@ -26,7 +26,7 @@ const register = async (req, res) => {
 
   if (result.length == 1) throw new BadRequestError('Email already exists.');
 
-  //! Hash password
+  // Hash password
   const hash = await bcrypt.hash(password, 10);
   let queryInsertUser = `INSERT INTO users (first_name, last_name, username, email, password) VALUES ('${firstName}', '${lastName}','${username}', '${email}', '${hash}')`;
 
@@ -35,7 +35,7 @@ const register = async (req, res) => {
 };
 
 
-//? Function to log in users
+// Function to log in users
 
 const login = async (req, res) => {
   const { username, password } = req.body;

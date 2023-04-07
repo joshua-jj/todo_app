@@ -10,21 +10,33 @@ const uploadTaskFile = async (req, res) => {
   const { todoID } = req.params;
   const { userID } = req.user;
 
-  //* Verify that todo belongs to this user
+  // Verify that todo belongs to this user
   await verifyTodo(todoID, userID);
 
+  if (!req.files) throw new BadRequestError('No file uploaded');
   const { file } = req.files;
-  if (!file) throw new BadRequestError('No file uploaded');
-  //! Check if file size limit (10MB) is exceeded
-  if (file.size > process.env.MAX_FILE_SIZE)
-    throw new BadRequestError('File should be less than 10MB');
-  const { tempFilePath } = file;
-  const result = await cloudinary.uploader.upload(tempFilePath, {
-    use_filename: true,
-    folder: 'Todo App',
-  });
-  unlinkSync(tempFilePath);
-  res.status(StatusCodes.OK).json({ file: result.secure_url });
+  let taskFiles;
+  file instanceof Array ? (taskFiles = file) : (taskFiles = Object.values(req.files));
+  let fileLinks = [];
+  const maxFileSize = process.env.MAX_FILE_SIZE / (1024 * 1024);
+  if (taskFiles.length > process.env.MAX_NUMBER_OF_FILES) {
+    throw new BadRequestError(
+      `You cannot upload more than ${process.env.MAX_NUMBER_OF_FILES} files`
+    );
+  }
+  for (const file of taskFiles) {
+    // Check if file size limit is exceeded
+    if (file.size > process.env.MAX_FILE_SIZE)
+      throw new BadRequestError(`File(s) should be less than ${maxFileSize}MB`);
+    const { tempFilePath } = file;
+    const result = await cloudinary.uploader.upload(tempFilePath, {
+      use_filename: true,
+      folder: 'Todo App',
+    });
+    fileLinks.push(result.secure_url);
+    unlinkSync(tempFilePath);
+  }
+  res.status(StatusCodes.OK).json({ fileLinks });
 };
 
 module.exports = { uploadTaskFile };

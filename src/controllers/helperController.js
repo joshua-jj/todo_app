@@ -1,8 +1,7 @@
 const db = require('../db/connect');
 const { NotFoundError } = require('../errors');
-// require('express-async-errors');
 
-//* Function to verify that todo exists and belongs to the logged in user
+// Function to verify that todo exists and belongs to the logged in user
 const verifyTodo = async (todoID, userID) => {
   let queryTodo = `SELECT * FROM todos where id = ${todoID} AND user_id = ${userID}`;
   const [todo] = await db.query(queryTodo);
@@ -11,7 +10,7 @@ const verifyTodo = async (todoID, userID) => {
   }
 };
 
-// ? Function to verify that task exists in the todo
+// Function to verify that task exists in the todo
 const verifyTask = async (taskID, todoID) => {
   let queryTask = `SELECT * FROM tasks where id = ${taskID} AND todo_id = ${todoID}`;
   const [task] = await db.query(queryTask);
@@ -20,7 +19,7 @@ const verifyTask = async (taskID, todoID) => {
   }
 };
 
-//! Function to reset table to auto increment 1
+// Function to reset table to auto increment 1
 const resetTable = async table => {
   let queryReset = `ALTER TABLE ${table} AUTO_INCREMENT = 1`;
   await db.query(queryReset);
