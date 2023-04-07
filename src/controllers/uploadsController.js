@@ -4,7 +4,7 @@ const { unlinkSync } = require('fs');
 const { StatusCodes } = require('http-status-codes');
 const { BadRequestError, NotFoundError } = require('../errors');
 const cloudinary = require('cloudinary').v2;
-const { verifyTodo, verifyTask } = require('./helperController');
+const { verifyTodo } = require('./helperController');
 
 const uploadTaskFile = async (req, res) => {
   const { todoID } = req.params;
