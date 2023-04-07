@@ -209,7 +209,6 @@ const searchTask = async (req, res) => {
     WHERE todo_id IN (SELECT id FROM todos WHERE user_id = ${userID}) AND tasks.title LIKE "%${query}%"
   `;
   const [result] = await db.query(querySearch);
-  console.log(result.length);
   if (result.length == 0) throw new NotFoundError('No result found');
   res.status(StatusCodes.OK).json({ result });
 };

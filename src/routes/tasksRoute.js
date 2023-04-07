@@ -7,7 +7,7 @@ const {
   deleteTask,
   searchTask,
 } = require('../controllers/tasksController');
-const { uploadTasksFile, uploadTaskFile } = require('../controllers/uploadsController');
+const { uploadTaskFile } = require('../controllers/uploadsController');
 const authenticateToken = require('../middlewares/authMiddleware');
 const router = express.Router();
 
