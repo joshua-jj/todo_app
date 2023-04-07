@@ -1,21 +1,21 @@
 const db = require('../db/connect');
 const { StatusCodes } = require('http-status-codes');
 const { BadRequestError, NotFoundError } = require('../errors');
-const { verifyTodo, verifyTask } = require('./helperController');
+const { verifyTodo, verifyTask, resetTable } = require('./helperController');
 
 // Function to insert files into task table
 const insertFiles = async (file, taskID) => {
   let queryInsertFile;
-  if (file.length > 0) {
+   if (file.length > 0) {
     for (const item of file) {
       queryInsertFile = `INSERT INTO files (file, task_id) VALUES("${item}", ${taskID})`;
       await db.query(queryInsertFile);
     }
   } else {
-    queryInsertFile = `INSERT INTO files (task_id) VALUES(${taskID})`;
+    queryInsertFile = `INSERT INTO files (file, task_id) VALUES("", ${taskID})`;
     await db.query(queryInsertFile);
   }
-};
+}
 
 // Function to get all tasks
 const getAllTasks = async (req, res) => {
@@ -68,21 +68,27 @@ const createTask = async (req, res) => {
   if (!title) throw new BadRequestError('Please provide task title');
   let queryTasks = `SELECT * FROM tasks WHERE title = "${title}"`;
   let queryInsertTask;
-  if (deadline) {
-    queryInsertTask = `INSERT INTO tasks (title, description, completed, deadline, todo_id) VALUES ("${title}", "${description}", ${isCompleted}, "${deadline}", ${todoID})`;
+  if (!deadline) {
+    deadline = null;
+    queryInsertTask = `INSERT INTO tasks (title, description, completed, deadline, todo_id) VALUES ("${title}", "${description}", ${isCompleted}, ${deadline}, ${todoID})`;
   } else {
-    queryInsertTask = `INSERT INTO tasks (title, description, completed, todo_id) VALUES ("${title}", "${description}", ${isCompleted}, ${todoID})`;
+    queryInsertTask = `INSERT INTO tasks (title, description, completed, deadline, todo_id) VALUES ("${title}", "${description}", ${isCompleted}, "${deadline}", ${todoID})`;
   }
   const [tasks] = await db.query(queryTasks);
   if (tasks.length > 0) throw new BadRequestError('Task already exists');
 
+  // Reset tasks table to auto increment 1
+  await resetTable('tasks');
+
   // Insert into task table
   await db.query(queryInsertTask);
   const [[lastID]] = await db.query(`SELECT LAST_INSERT_ID()`);
-  const [last] = await db.query(`SELECT LAST_INSERT_ID()`);
 
   // Get id of newly inserted task;
   const { 'LAST_INSERT_ID()': taskID } = lastID;
+
+  // Reset tasks_priorities table to auto increment 1
+  await resetTable('tasks_priorities');
 
   if (priority) {
     let queryPriorityID = `SELECT id FROM priorities WHERE name = '${priority}'`;
@@ -95,6 +101,9 @@ const createTask = async (req, res) => {
 
   // Insert into task_priority table
   await db.query(queryInsertTaskPriority);
+
+  // Reset files table to auto increment 1
+  await resetTable('files');
 
   // Insert into files table
   await insertFiles(file, taskID);
@@ -130,15 +139,19 @@ const updateTask = async (req, res) => {
   await verifyTodo(todoID, userID);
   let queryUpdateTask;
 
-  if (deadline) {
-    queryUpdateTask = `UPDATE tasks SET title = "${title}", description = "${description}", completed = ${isCompleted}, deadline = "${deadline}" WHERE id = ${taskID}`;
+  if (!deadline) {
+    deadline = null;
+    queryUpdateTask = `UPDATE tasks SET title = "${title}", description = "${description}", completed = ${isCompleted}, deadline = ${deadline} WHERE id = ${taskID}`;
   } else {
-    queryUpdateTask = `UPDATE tasks SET title = "${title}", description = "${description}", completed = ${isCompleted} WHERE id = ${taskID}`;
+    queryUpdateTask = `UPDATE tasks SET title = "${title}", description = "${description}", completed = ${isCompleted}, deadline = "${deadline}" WHERE id = ${taskID}`;
   }
 
   // verify that task exists in the todo
   await verifyTask(taskID, todoID);
   await db.query(queryUpdateTask);
+
+  // Reset tasks_priorities table to auto increment 1
+  await resetTable('tasks_priorities');
 
   // Update Priority table
   if (priority) {
@@ -154,8 +167,11 @@ const updateTask = async (req, res) => {
 
   // Update files table
   // Delete files from file table
-  let queryDeleteFile = `DELETE FROM files WHERE task_id = ${taskID}`;
+  let queryDeleteFile = `DELETE FROM files WHERE task_id = ${taskID}`
   await db.query(queryDeleteFile);
+
+  // Reset files table to auto increment 1
+  await resetTable('files');
 
   // Insert files into file table
   await insertFiles(file, taskID);
@@ -175,6 +191,8 @@ const deleteTask = async (req, res) => {
   await verifyTask(taskID, todoID);
   await db.query(queryDeleteTask);
 
+  // Reset tasks table to auto increment 1
+  await resetTable('tasks');
   res.status(StatusCodes.OK).json({ mssg: 'Task deleted' });
 };
 
@@ -191,6 +209,7 @@ const searchTask = async (req, res) => {
     WHERE todo_id IN (SELECT id FROM todos WHERE user_id = ${userID}) AND tasks.title LIKE "%${query}%"
   `;
   const [result] = await db.query(querySearch);
+  console.log(result.length);
   if (result.length == 0) throw new NotFoundError('No result found');
   res.status(StatusCodes.OK).json({ result });
 };

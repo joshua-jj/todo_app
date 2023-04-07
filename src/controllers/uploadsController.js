@@ -4,7 +4,7 @@ const { unlinkSync } = require('fs');
 const { StatusCodes } = require('http-status-codes');
 const { BadRequestError, NotFoundError } = require('../errors');
 const cloudinary = require('cloudinary').v2;
-const { verifyTodo } = require('./helperController');
+const { verifyTodo, verifyTask } = require('./helperController');
 
 const uploadTaskFile = async (req, res) => {
   const { todoID } = req.params;
@@ -30,7 +30,6 @@ const uploadTaskFile = async (req, res) => {
       throw new BadRequestError(`File(s) should be less than ${maxFileSize}MB`);
     const { tempFilePath } = file;
     const result = await cloudinary.uploader.upload(tempFilePath, {
-      // public_id: 'trial',
       use_filename: true,
       folder: 'Todo App',
     });

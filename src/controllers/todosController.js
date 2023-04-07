@@ -1,7 +1,7 @@
 const db = require('../db/connect');
 const { StatusCodes } = require('http-status-codes');
 const { BadRequestError, NotFoundError } = require('../errors');
-const { verifyTodo } = require('./helperController');
+const { verifyTodo, resetTable } = require('./helperController');
 
 
 // Function to get all todos
@@ -21,12 +21,18 @@ const createTodo = async (req, res) => {
   let result, tagID;
   let queryInsertTodo = `INSERT INTO todos (title, description, user_id) VALUES ("${title}", "${description}", ${userID})`;
 
+  // Reset todos table to auto increment 1
+  await resetTable('todos');
+
   // Inset into todo table
   await db.query(queryInsertTodo);
   const [[lastID]] = await db.query(`SELECT LAST_INSERT_ID()`);
 
   // Get id of newly inserted todo;
   const { 'LAST_INSERT_ID()': todoID } = lastID;
+
+  // Reset todos_tags table to auto increment 1
+  await resetTable('todos_tags');
 
   if (tag) {
     let queryTagID = `SELECT id FROM tags WHERE name = '${tag}'`;
@@ -68,6 +74,9 @@ const updateTodo = async (req, res) => {
   await verifyTodo(todoID, userID);
   await db.query(queryUpdateTodo);
 
+  // Reset todos_tags table to auto increment 1
+  await resetTable('todos_tags');
+
   if (tag) {
     let queryTagID = `SELECT id FROM tags WHERE name = '${tag}'`;
     [[result]] = await db.query(queryTagID);
@@ -92,6 +101,8 @@ const deleteTodo = async (req, res) => {
   await verifyTodo(todoID, userID);
   await db.query(queryDeleteTodo);
 
+  //  Reset todos table to auto increment 1
+  await resetTable('todos');
   res.status(StatusCodes.OK).json({ mssg: 'Todo deleted' });
 };
 

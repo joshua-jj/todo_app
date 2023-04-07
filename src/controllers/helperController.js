@@ -19,5 +19,10 @@ const verifyTask = async (taskID, todoID) => {
   }
 };
 
+// Function to reset table to auto increment 1
+const resetTable = async table => {
+  let queryReset = `ALTER TABLE ${table} AUTO_INCREMENT = 1`;
+  await db.query(queryReset);
+};
 
-module.exports = { verifyTodo, verifyTask };
+module.exports = { verifyTodo, verifyTask, resetTable };

@@ -53,7 +53,7 @@ const login = async (req, res) => {
   const token = jwt.sign({ userID, firstName }, process.env.ACCESS_TOKEN_SECRET, {
     expiresIn: '60d',
   });
-  res.status(StatusCodes.OK).json({ mssg: `Welcome ${firstName}`, token });
+  res.status(StatusCodes.OK).json({ mssg: result, token });
 };
 
 module.exports = { register, login };
