@@ -12,7 +12,7 @@ const insertFiles = async (file, taskID) => {
       await db.query(queryInsertFile);
     }
   } else {
-    queryInsertFile = `INSERT INTO files (file, task_id) VALUES("", ${taskID})`;
+    queryInsertFile = `INSERT INTO files (task_id) VALUES(${taskID})`;
     await db.query(queryInsertFile);
   }
 }
@@ -68,11 +68,10 @@ const createTask = async (req, res) => {
   if (!title) throw new BadRequestError('Please provide task title');
   let queryTasks = `SELECT * FROM tasks WHERE title = "${title}"`;
   let queryInsertTask;
-  if (!deadline) {
-    deadline = null;
-    queryInsertTask = `INSERT INTO tasks (title, description, completed, deadline, todo_id) VALUES ("${title}", "${description}", ${isCompleted}, ${deadline}, ${todoID})`;
-  } else {
+  if (deadline) {
     queryInsertTask = `INSERT INTO tasks (title, description, completed, deadline, todo_id) VALUES ("${title}", "${description}", ${isCompleted}, "${deadline}", ${todoID})`;
+  } else {
+    queryInsertTask = `INSERT INTO tasks (title, description, completed, todo_id) VALUES ("${title}", "${description}", ${isCompleted}, ${todoID})`;
   }
   const [tasks] = await db.query(queryTasks);
   if (tasks.length > 0) throw new BadRequestError('Task already exists');
@@ -130,11 +129,10 @@ const updateTask = async (req, res) => {
   await verifyTodo(todoID, userID);
   let queryUpdateTask;
 
-  if (!deadline) {
-    deadline = null;
-    queryUpdateTask = `UPDATE tasks SET title = "${title}", description = "${description}", completed = ${isCompleted}, deadline = ${deadline} WHERE id = ${taskID}`;
-  } else {
+  if (deadline) {
     queryUpdateTask = `UPDATE tasks SET title = "${title}", description = "${description}", completed = ${isCompleted}, deadline = "${deadline}" WHERE id = ${taskID}`;
+  } else {
+    queryUpdateTask = `UPDATE tasks SET title = "${title}", description = "${description}", completed = ${isCompleted} WHERE id = ${taskID}`;
   }
 
   // verify that task exists in the todo
